@@ -68,13 +68,22 @@ public class MinhaClasse implements antlrVisitor<Object>{
 	@Override
 	public Object visitIdentifier(IdentifierContext ctx) {
 		// TODO Auto-generated method stub
-		return null;
+		return new Identifier(ctx.getText());
 	}
 
 	@Override
 	public Object visitGoal(GoalContext ctx) {
 		// TODO Auto-generated method stub
-		return null;
+		//composta por mainclass class declaration e EOF
+		MainClass main = (MainClass) ctx.mainclass().accept(this);
+		
+		ClassDeclList declList = new ClassDeclList();
+		for (ClassdeclarationContext cd: ctx.classdeclaration()) {
+			declList.addElement((ClassDecl) cd.accept(this));
+		}
+		
+		
+		return new Program(main, declList);
 	}
 
 	@Override
