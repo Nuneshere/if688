@@ -6,11 +6,6 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import br.ufpe.cin.if688.minijava.ast.*;
-import br.ufpe.cin.if688.minijava.ast.BooleanType;
-import br.ufpe.cin.if688.minijava.ast.Exp;
-import br.ufpe.cin.if688.minijava.ast.Identifier;
-import br.ufpe.cin.if688.minijava.ast.StatementList;
-import br.ufpe.cin.if688.minijava.ast.Type;
 import br.ufpe.cin.if688.minijava.main.antlrParser.ClassdeclarationContext;
 import br.ufpe.cin.if688.minijava.main.antlrParser.ExpressionContext;
 import br.ufpe.cin.if688.minijava.main.antlrParser.GoalContext;
@@ -61,8 +56,28 @@ public class MinhaClasse implements antlrVisitor<Object>{
 
 	@Override
 	public Object visitClassdeclaration(ClassdeclarationContext ctx) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		//vamos seguir então o a sequencia de VaredeclList e depois MethodDeclList, percorrendo pela lista e aceitando todos componentes
+		VarDeclList avl = new  VarDeclList();
+		for(int i = 0 ; i < ctx.vardeclaration().size(); i++ ){
+			VarDecl v =  (VarDecl) ctx.vardeclaration(i).accept(this);
+			avl.addElement(v);
+		}
+		
+		MethodDeclList mdl = new  MethodDeclList();
+		for(int i = 0 ; i < ctx.methoddeclaration().size(); i++ ){
+			MethodDecl m =  (MethodDecl) ctx.methoddeclaration(i).accept(this);
+			mdl.addElement(m);
+		}
+		ClassDecl classDec;
+		//aqui os identifiers iniciais são importantes, somente com 1 se torna uma declaração de classe simples, porém com mais de 1 seria uma classe que extende
+		if(ctx.identifier().size() > 1) {
+			classDec = new ClassDeclExtends( ( Identifier )  ctx.identifier(0).accept(this), (Identifier) ctx.identifier(1).accept(this), avl, mdl );
+		} else {
+			//caso somente 1 identifier então se torna simples
+			classDec = new ClassDeclSimple(( Identifier )  ctx.identifier(0).accept(this),avl,mdl);
+		}
+		return classDec;
 	}
 
 	@Override
@@ -101,7 +116,7 @@ public class MinhaClasse implements antlrVisitor<Object>{
 		Identifier ai = (Identifier) ctx.identifier(0).accept(this);
 		
 		FormalList afl = new FormalList();
-		for(int i =1 ; i < ctx.type().size(); i++ ){
+		for(int i = 1 ; i < ctx.type().size(); i++ ){
 			Type tipo = (Type) ctx.type(i).accept(this);
 			Identifier iden = (Identifier) ctx.identifier(i).accept(this);
 			Formal f = new Formal(tipo,iden);
@@ -110,16 +125,21 @@ public class MinhaClasse implements antlrVisitor<Object>{
 		}
 		
 		VarDeclList avl = new  VarDeclList();
-		for(int i =1 ; i < ctx.type().size(); i++ ){
-			Type tipo = (Type) ctx.type(i).accept(this);
-			Identifier iden = (Identifier) ctx.identifier(i).accept(this);
-			Formal f = new Formal(tipo,iden);
-			
-			afl.addElement(f);
+		for(int i = 0 ; i < ctx.vardeclaration().size(); i++ ){
+			VarDecl v =  (VarDecl) ctx.vardeclaration(i).accept(this);
+			avl.addElement(v);
 		}
+		
 		StatementList asl = new StatementList();
+		for(int i = 0 ; i < ctx.statement().size(); i++ ){
+			Statement s = (Statement) ctx.statement(i).accept(this);
+			asl.addElement(s);
+		}
 		
 		Exp ae = (Exp) ctx.expression().accept(this);
+		
+		MethodDecl metodoFinal = new MethodDecl(at,ai,afl,avl,asl,ae);
+		return metodoFinal;
 		
 		return null; 
 	}
