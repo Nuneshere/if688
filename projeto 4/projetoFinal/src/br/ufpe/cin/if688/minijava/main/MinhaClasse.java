@@ -99,10 +99,27 @@ public class MinhaClasse implements antlrVisitor<Object>{
 		
 		Type at = (Type) ctx.type(0).accept(this);
 		Identifier ai = (Identifier) ctx.identifier(0).accept(this);
+		
+		FormalList afl = new FormalList();
+		for(int i =1 ; i < ctx.type().size(); i++ ){
+			Type tipo = (Type) ctx.type(i).accept(this);
+			Identifier iden = (Identifier) ctx.identifier(i).accept(this);
+			Formal f = new Formal(tipo,iden);
+			
+			afl.addElement(f);
+		}
+		
+		VarDeclList avl = new  VarDeclList();
+		for(int i =1 ; i < ctx.type().size(); i++ ){
+			Type tipo = (Type) ctx.type(i).accept(this);
+			Identifier iden = (Identifier) ctx.identifier(i).accept(this);
+			Formal f = new Formal(tipo,iden);
+			
+			afl.addElement(f);
+		}
+		StatementList asl = new StatementList();
+		
 		Exp ae = (Exp) ctx.expression().accept(this);
-		
-		StatementList asl = new StatementList();//??
-		
 		
 		return null; 
 	}
