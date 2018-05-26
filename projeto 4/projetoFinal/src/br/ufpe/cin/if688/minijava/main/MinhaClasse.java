@@ -114,67 +114,68 @@ public class MinhaClasse implements antlrVisitor<Object>{
 	@Override
 	public Object visitExpression(ExpressionContext ctx) {
 		// TODO Auto-generated method stub
-		//expression '.' identifier '(' ( expression ( ',' expression )* )? ')'
-		if (ctx.getChildCount() >= 5 && ctx.getChild(1).getText().equals(".")) {
-			Exp exp = (Exp) ctx.expression(0).accept(this);
-			Identifier id = (Identifier) ctx.identifier().accept(this);
-			
-			ExpList expList = new ExpList();
-			for (ExpressionContext element: ctx.expression()) {
-				expList.addElement((Exp) element.accept(this));
-			}
-			return new Call(exp, id, expList);
-		} else if (ctx.expression().size() == 2) {
-			Exp exp1 = (Exp) ctx.expression(0).accept(this);
-			Exp exp2 = (Exp) ctx.expression(1).accept(this);
-			
-			String opperand = ctx.getChild(1).getText();
-			if (opperand.equals("&&")) {
-				return new And(exp1, exp2);
-			} else if (opperand.equals("<")) {
-				return new LessThan(exp1, exp2);
-			} else if (opperand.equals("+")) {
-				return new Plus(exp1, exp2);
-			} else if (opperand.equals("-")) {
-				return new Minus(exp1, exp2);
-			} else if (opperand.equals("*")) {
-				return new Times(exp1, exp2);
-			} else {
-				return new ArrayLookup(exp1, exp2);
-			}
-		} else if (ctx.expression().size() == 1) {
-			Exp exp = (Exp) ctx.expression(0).accept(this);
-			
-			String opperand = ctx.getChild(0).getText();
-			if (opperand.equals("!")) {
-				return new Not(exp);
-			} else if (opperand.equals("(")) {
-				return exp;
-			} else if (opperand.equals("new")) {
-				return new NewArray(exp);
-			} else  {
-				return new ArrayLength(exp);
-			}
-		} else {
-			String token = ctx.getChild(0).getText();
-			
-			if (token.equals("true")) {
-				return new True();
-			} else if (token.equals("false")) {
-				return new False();
-			} else if (token.equals("this")) {
-				return new This();
-			} else if (token.equals("new")) {
-				return new NewObject((Identifier) ctx.identifier().accept(this));
-			} else {
-				if (token.matches("\\d+")) {
-					return new IntegerLiteral(Integer.parseInt(ctx.getStart().getText()));
+				//expression '.' identifier '(' ( expression ( ',' expression )* )? ')'
+				if (ctx.getChildCount() >= 5 && ctx.getChild(1).getText().equals(".")) {
+					Exp exp = (Exp) ctx.expression(0).accept(this);
+					Identifier id = (Identifier) ctx.identifier().accept(this);
+					
+					ExpList expList = new ExpList();
+					for (ExpressionContext element: ctx.expression()) {
+						expList.addElement((Exp) element.accept(this));
+					}
+					return new Call(exp, id, expList);
+				} else if (ctx.expression().size() == 2) {
+					Exp exp1 = (Exp) ctx.expression(0).accept(this);
+					Exp exp2 = (Exp) ctx.expression(1).accept(this);
+					
+					String opperand = ctx.getChild(1).getText();
+					if (opperand.equals("&&")) {
+						return new And(exp1, exp2);
+					} else if (opperand.equals("<")) {
+						return new LessThan(exp1, exp2);
+					} else if (opperand.equals("+")) {
+						return new Plus(exp1, exp2);
+					} else if (opperand.equals("-")) {
+						return new Minus(exp1, exp2);
+					} else if (opperand.equals("*")) {
+						return new Times(exp1, exp2);
+					} else {
+						return new ArrayLookup(exp1, exp2);
+					}
+				} else if (ctx.expression().size() == 1) {
+					Exp exp = (Exp) ctx.expression(0).accept(this);
+					
+					String opperand = ctx.getChild(0).getText();
+					if (opperand.equals("!")) {
+						return new Not(exp);
+					} else if (opperand.equals("(")) {
+						return exp;
+					} else if (opperand.equals("new")) {
+						return new NewArray(exp);
+					} else  {
+						return new ArrayLength(exp);
+					}
 				} else {
-					return (Identifier) ctx.identifier().accept(this);
+					String token = ctx.getChild(0).getText();
+					
+					if (token.equals("true")) {
+						return new True();
+					} else if (token.equals("false")) {
+						return new False();
+					} else if (token.equals("this")) {
+						return new This();
+					} else if (token.equals("new")) {
+						return new NewObject((Identifier) ctx.identifier().accept(this));
+					} else {
+						if (token.matches("\\d+")) {
+							return new IntegerLiteral(Integer.parseInt(ctx.getStart().getText()));
+						} else {
+							return (Identifier) ctx.identifier().accept(this);
+						}
+					}
 				}
 			}
-		}
-	}
+
 
 	@Override
 	public Object visitMethoddeclaration(MethoddeclarationContext ctx) {
