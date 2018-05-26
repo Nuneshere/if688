@@ -44,7 +44,10 @@ public class MinhaClasse implements antlrVisitor<Object>{
 
 	@Override
 	public Object visitVardeclaration(VardeclarationContext ctx) {
-		// TODO Auto-generated method stub
+		Type tipo = (Type) ctx.type().accept(this);
+		Identifier iden = (Identifier) ctx.identifier().accept(this);
+		
+		VarDecl varD= new VarDecl(tipo,iden);
 		return null;
 	}
 
@@ -58,6 +61,7 @@ public class MinhaClasse implements antlrVisitor<Object>{
 	public Object visitClassdeclaration(ClassdeclarationContext ctx) {
 		
 		//vamos seguir então o a sequencia de VaredeclList e depois MethodDeclList, percorrendo pela lista e aceitando todos componentes
+		
 		VarDeclList avl = new  VarDeclList();
 		for(int i = 0 ; i < ctx.vardeclaration().size(); i++ ){
 			VarDecl v =  (VarDecl) ctx.vardeclaration(i).accept(this);
@@ -69,8 +73,10 @@ public class MinhaClasse implements antlrVisitor<Object>{
 			MethodDecl m =  (MethodDecl) ctx.methoddeclaration(i).accept(this);
 			mdl.addElement(m);
 		}
+		
 		ClassDecl classDec;
 		//aqui os identifiers iniciais são importantes, somente com 1 se torna uma declaração de classe simples, porém com mais de 1 seria uma classe que extende
+		
 		if(ctx.identifier().size() > 1) {
 			classDec = new ClassDeclExtends( ( Identifier )  ctx.identifier(0).accept(this), (Identifier) ctx.identifier(1).accept(this), avl, mdl );
 		} else {
@@ -123,7 +129,7 @@ public class MinhaClasse implements antlrVisitor<Object>{
 			
 			afl.addElement(f);
 		}
-		
+		//não precisamos correr o for brutsamente como no FormalList pois tenho metodo so para isso ali em cima
 		VarDeclList avl = new  VarDeclList();
 		for(int i = 0 ; i < ctx.vardeclaration().size(); i++ ){
 			VarDecl v =  (VarDecl) ctx.vardeclaration(i).accept(this);
@@ -141,7 +147,6 @@ public class MinhaClasse implements antlrVisitor<Object>{
 		MethodDecl metodoFinal = new MethodDecl(at,ai,afl,avl,asl,ae);
 		return metodoFinal;
 		
-		return null; 
 	}
 
 	@Override
