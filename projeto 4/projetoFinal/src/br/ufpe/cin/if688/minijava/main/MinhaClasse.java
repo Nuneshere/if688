@@ -53,8 +53,12 @@ public class MinhaClasse implements antlrVisitor<Object>{
 
 	@Override
 	public Object visitMainclass(MainclassContext ctx) {
-		// TODO Auto-generated method stub
-		return null;
+		//como as outras so basta olhar a classe no ast provido, e criar o mainclasse com o parametros desejado, apos isso retorna-lo
+		Identifier iden = (Identifier) ctx.identifier(0).accept(this);
+		Identifier iden2 = (Identifier) ctx.identifier(0).accept(this);
+		Statement state = (Statement) ctx.statement().accept(this);
+		MainClass main = new MainClass(iden,iden2,state);
+		return main;
 	}
 
 	@Override
