@@ -155,21 +155,61 @@ public class MinhaClasse implements antlrVisitor<Object>{
 
 	@Override
 	public Object visitStatement(StatementContext ctx) {
-		// TODO Auto-generated method stub
-		return null;
+		//para verificar como iremos montar a ast, precisamos utilizar o começo como o gatilho do statement, oq vai definir oq faremos dps, isso ta claro no antlr.g4 
+		String gatilho = ctx.getStart().getText();
+		
+		//se começar com {, traremos um novo statement tipo recursivo.
+		switch(gatilho) {
+		case "if":
+			Exp expIf = (Exp) ctx.expression(0).accept(this);
+			Statement stateIf = (Statement) ctx.statement(0).accept(this);
+			Statement stateIf2 = (Statement) ctx.statement(1).accept(this);
+			If condition1 = new If(expIf,stateIf,stateIf2);
+			return condition1;
+		case "while":
+			Exp expWhile = (Exp) ctx.expression(0).accept(this);
+			Statement stateWhile = (Statement) ctx.statement(0).accept(this);
+			While condition2 = new While(expWhile,stateWhile);
+			return condition2;
+		case "System.out.println":
+			Exp expPrint = (Exp) ctx.expression(0).accept(this);
+			Print printx = new Print(expPrint);
+			return printx;
+		case "{":
+			StatementList asl = new StatementList();
+			for(int i = 0 ; i < ctx.statement().size(); i++ ){
+				Statement s = (Statement) ctx.statement(i).accept(this);
+				asl.addElement(s);
+			}
+			Block b = new Block(asl);
+			return b;	
+		default:
+			if ( ctx.expression().size() == 1) {
+				//caso "=" e ";"
+				Identifier idEqual = (Identifier) ctx.identifier().accept(this);
+				Exp expEqual = (Exp) ctx.expression(0).accept(this);
+				return new Assign(idEqual,expEqual);
+			} else {
+				Identifier idQua = (Identifier) ctx.identifier().accept(this);
+				Exp expQua = (Exp) ctx.expression(0).accept(this);
+				Exp expQua2 = (Exp) ctx.expression(1).accept(this);
+				return new ArrayAssign(idQua,expQua,expQua2);
+			}
+		}
 	}
 
 	@Override
 	public Object visitType(TypeContext ctx) {
 		//reconhecer o type e retornar o devido tipo;
 		String tipo = ctx.getText();
-		if(tipo=="boolean") {
+		switch(tipo) {
+		case "boolean":
 			return new BooleanType();
-		} else if (tipo=="int") {
+		case "int" :
 			return new IntegerType();
-		} else if (tipo=="int []") {
+		case "int []": 
 			return new IntArrayType();
-		} else {
+		default:
 			//é um identifier segundo a grammar
 			return new IdentifierType(tipo);
 		}
