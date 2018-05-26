@@ -48,7 +48,7 @@ public class MinhaClasse implements antlrVisitor<Object>{
 		Identifier iden = (Identifier) ctx.identifier().accept(this);
 		
 		VarDecl varD= new VarDecl(tipo,iden);
-		return null;
+		return varD;
 	}
 
 	@Override
@@ -263,10 +263,10 @@ public class MinhaClasse implements antlrVisitor<Object>{
 		//reconhecer o type e retornar o devido tipo;
 		String tipo = ctx.getText();
 		switch(tipo) {
-		case "boolean":
-			return new BooleanType();
 		case "int" :
 			return new IntegerType();
+		case "boolean":
+			return new BooleanType();
 		case "int []": 
 			return new IntArrayType();
 		default:
