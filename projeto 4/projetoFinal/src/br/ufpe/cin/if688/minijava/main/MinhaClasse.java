@@ -6,11 +6,6 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import br.ufpe.cin.if688.minijava.ast.*;
-import br.ufpe.cin.if688.minijava.ast.BooleanType;
-import br.ufpe.cin.if688.minijava.ast.Exp;
-import br.ufpe.cin.if688.minijava.ast.Identifier;
-import br.ufpe.cin.if688.minijava.ast.StatementList;
-import br.ufpe.cin.if688.minijava.ast.Type;
 import br.ufpe.cin.if688.minijava.main.antlrParser.ClassdeclarationContext;
 import br.ufpe.cin.if688.minijava.main.antlrParser.ExpressionContext;
 import br.ufpe.cin.if688.minijava.main.antlrParser.GoalContext;
@@ -49,20 +44,50 @@ public class MinhaClasse implements antlrVisitor<Object>{
 
 	@Override
 	public Object visitVardeclaration(VardeclarationContext ctx) {
-		// TODO Auto-generated method stub
+		Type tipo = (Type) ctx.type().accept(this);
+		Identifier iden = (Identifier) ctx.identifier().accept(this);
+		
+		VarDecl varD= new VarDecl(tipo,iden);
 		return null;
 	}
 
 	@Override
 	public Object visitMainclass(MainclassContext ctx) {
-		// TODO Auto-generated method stub
-		return null;
+		//como as outras so basta olhar a classe no ast provido, e criar o mainclasse com o parametros desejado, apos isso retorna-lo
+		Identifier iden = (Identifier) ctx.identifier(0).accept(this);
+		Identifier iden2 = (Identifier) ctx.identifier(0).accept(this);
+		Statement state = (Statement) ctx.statement().accept(this);
+		MainClass main = new MainClass(iden,iden2,state);
+		return main;
 	}
 
 	@Override
 	public Object visitClassdeclaration(ClassdeclarationContext ctx) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		//vamos seguir então o a sequencia de VaredeclList e depois MethodDeclList, percorrendo pela lista e aceitando todos componentes
+		
+		VarDeclList avl = new  VarDeclList();
+		for(int i = 0 ; i < ctx.vardeclaration().size(); i++ ){
+			VarDecl v =  (VarDecl) ctx.vardeclaration(i).accept(this);
+			avl.addElement(v);
+		}
+		
+		MethodDeclList mdl = new  MethodDeclList();
+		for(int i = 0 ; i < ctx.methoddeclaration().size(); i++ ){
+			MethodDecl m =  (MethodDecl) ctx.methoddeclaration(i).accept(this);
+			mdl.addElement(m);
+		}
+		
+		ClassDecl classDec;
+		//aqui os identifiers iniciais são importantes, somente com 1 se torna uma declaração de classe simples, porém com mais de 1 seria uma classe que extende
+		
+		if(ctx.identifier().size() > 1) {
+			classDec = new ClassDeclExtends( ( Identifier )  ctx.identifier(0).accept(this), (Identifier) ctx.identifier(1).accept(this), avl, mdl );
+		} else {
+			//caso somente 1 identifier então se torna simples
+			classDec = new ClassDeclSimple(( Identifier )  ctx.identifier(0).accept(this),avl,mdl);
+		}
+		return classDec;
 	}
 
 	@Override
@@ -160,46 +185,90 @@ public class MinhaClasse implements antlrVisitor<Object>{
 		Identifier ai = (Identifier) ctx.identifier(0).accept(this);
 		
 		FormalList afl = new FormalList();
-		for(int i =1 ; i < ctx.type().size(); i++ ){
+		for(int i = 1 ; i < ctx.type().size(); i++ ){
 			Type tipo = (Type) ctx.type(i).accept(this);
 			Identifier iden = (Identifier) ctx.identifier(i).accept(this);
 			Formal f = new Formal(tipo,iden);
 			
 			afl.addElement(f);
+		}
+		//não precisamos correr o for brutsamente como no FormalList pois tenho metodo so para isso ali em cima
+		VarDeclList avl = new  VarDeclList();
+		for(int i = 0 ; i < ctx.vardeclaration().size(); i++ ){
+			VarDecl v =  (VarDecl) ctx.vardeclaration(i).accept(this);
+			avl.addElement(v);
 		}
 		
-		VarDeclList avl = new  VarDeclList();
-		for(int i =1 ; i < ctx.type().size(); i++ ){
-			Type tipo = (Type) ctx.type(i).accept(this);
-			Identifier iden = (Identifier) ctx.identifier(i).accept(this);
-			Formal f = new Formal(tipo,iden);
-			
-			afl.addElement(f);
-		}
 		StatementList asl = new StatementList();
+		for(int i = 0 ; i < ctx.statement().size(); i++ ){
+			Statement s = (Statement) ctx.statement(i).accept(this);
+			asl.addElement(s);
+		}
 		
 		Exp ae = (Exp) ctx.expression().accept(this);
 		
-		return null; 
+		MethodDecl metodoFinal = new MethodDecl(at,ai,afl,avl,asl,ae);
+		return metodoFinal;
+		
 	}
 
 	@Override
 	public Object visitStatement(StatementContext ctx) {
-		// TODO Auto-generated method stub
-		return null;
+		//para verificar como iremos montar a ast, precisamos utilizar o começo como o gatilho do statement, oq vai definir oq faremos dps, isso ta claro no antlr.g4 
+		String gatilho = ctx.getStart().getText();
+		
+		//se começar com {, traremos um novo statement tipo recursivo.
+		switch(gatilho) {
+		case "if":
+			Exp expIf = (Exp) ctx.expression(0).accept(this);
+			Statement stateIf = (Statement) ctx.statement(0).accept(this);
+			Statement stateIf2 = (Statement) ctx.statement(1).accept(this);
+			If condition1 = new If(expIf,stateIf,stateIf2);
+			return condition1;
+		case "while":
+			Exp expWhile = (Exp) ctx.expression(0).accept(this);
+			Statement stateWhile = (Statement) ctx.statement(0).accept(this);
+			While condition2 = new While(expWhile,stateWhile);
+			return condition2;
+		case "System.out.println":
+			Exp expPrint = (Exp) ctx.expression(0).accept(this);
+			Print printx = new Print(expPrint);
+			return printx;
+		case "{":
+			StatementList asl = new StatementList();
+			for(int i = 0 ; i < ctx.statement().size(); i++ ){
+				Statement s = (Statement) ctx.statement(i).accept(this);
+				asl.addElement(s);
+			}
+			Block b = new Block(asl);
+			return b;	
+		default:
+			if ( ctx.expression().size() == 1) {
+				//caso "=" e ";"
+				Identifier idEqual = (Identifier) ctx.identifier().accept(this);
+				Exp expEqual = (Exp) ctx.expression(0).accept(this);
+				return new Assign(idEqual,expEqual);
+			} else {
+				Identifier idQua = (Identifier) ctx.identifier().accept(this);
+				Exp expQua = (Exp) ctx.expression(0).accept(this);
+				Exp expQua2 = (Exp) ctx.expression(1).accept(this);
+				return new ArrayAssign(idQua,expQua,expQua2);
+			}
+		}
 	}
 
 	@Override
 	public Object visitType(TypeContext ctx) {
 		//reconhecer o type e retornar o devido tipo;
 		String tipo = ctx.getText();
-		if(tipo=="boolean") {
+		switch(tipo) {
+		case "boolean":
 			return new BooleanType();
-		} else if (tipo=="int") {
+		case "int" :
 			return new IntegerType();
-		} else if (tipo=="int []") {
+		case "int []": 
 			return new IntArrayType();
-		} else {
+		default:
 			//é um identifier segundo a grammar
 			return new IdentifierType(tipo);
 		}
